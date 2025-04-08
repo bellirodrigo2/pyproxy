@@ -54,7 +54,10 @@ IteratorHandler = GetHandler
 StrHandler = GetHandler
 ReprHandler = GetHandler
 
-GetItemHandler = SetHandler
+
+@runtime_checkable
+class GetItemHandler(Protocol[T_contra]):
+    def __call__(self, obj: T_contra, key: str) -> Any: ...
 
 
 @runtime_checkable
