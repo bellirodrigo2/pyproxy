@@ -58,8 +58,26 @@ GetItemHandler = SetHandler
 
 
 @runtime_checkable
+class LenHandler(Protocol[T_contra]):
+    def __call__(self, obj: T_contra) -> int: ...
+
+
+@runtime_checkable
 class SetItemHandler(Protocol[T_contra]):
     def __call__(self, obj: T_contra, key: Any, value: Any) -> None: ...
+
+
+@runtime_checkable
+class EqualHandler(Protocol[T_contra]):
+    def __call__(self, obj: T_contra, other: Any) -> bool: ...
+
+
+NEqualHandler = EqualHandler
+
+
+@runtime_checkable
+class BoolHandler(Protocol[T_contra]):
+    def __call__(self, obj: T_contra) -> bool: ...
 
 
 @dataclass
@@ -75,6 +93,10 @@ class Handler(Generic[T]):
     repr: Optional[ReprHandler[T]] = None
     getitem: Optional[GetItemHandler[T]] = None
     setitem: Optional[SetItemHandler[T]] = None
+    len: Optional[LenHandler[T]] = None
+    eq: Optional[EqualHandler[T]] = None
+    ne: Optional[NEqualHandler[T]] = None
+    bool: Optional[BoolHandler[T]] = None
 
 
 @dataclass
@@ -89,7 +111,6 @@ class Proxy(Generic[T]):
         self._iter: Optional[Iterator[Any]] = None
 
     def __getattr__(self, name: str) -> Any:
-
         if self.handler.call:
             func = self.handler.call.get(name)
             if func is not None:
@@ -190,7 +211,7 @@ class Proxy(Generic[T]):
             return self.handler.repr(self.target)
         return repr(self.target)
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: Any) -> Any:
         if self.handler.getitem:
             return self.handler.getitem(self.target, key)
         return self.target[key]  # type: ignore
@@ -198,7 +219,27 @@ class Proxy(Generic[T]):
     def __setitem__(self, key: Any, value: Any) -> None:
         if self.handler.setitem:
             return self.handler.setitem(self.target, key, value)
-        self.target[key] = value
+        self.target[key] = value  # type: ignore
+
+    def __len__(self) -> int:
+        if self.handler.len:
+            return self.handler.len(self.target)
+        return len(self.target)  # type: ignore
+
+    def __eq__(self, other: Any) -> bool:
+        if self.handler.eq:
+            return self.handler.eq(self.target, other)
+        return self.target == other  # type: ignore
+
+    def __ne__(self, other: Any) -> bool:
+        if self.handler.ne:
+            return self.handler.ne(self.target, other)
+        return self.target != other  # type: ignore
+
+    def __bool__(self) -> bool:
+        if self.handler.bool:
+            return self.handler.bool(self.target)
+        return bool(self.target)
 
     @classmethod
     def wrap(
@@ -221,3 +262,9 @@ def unwrap(obj: Union[T, Proxy[T]]) -> T:
     if is_proxy(obj):
         return getattr(obj, "target")
     return obj  # type: ignore
+
+
+def deep_unwrap(obj: Any) -> Any:
+    while is_proxy(obj):
+        obj = unwrap(obj)
+    return obj
