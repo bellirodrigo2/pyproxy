@@ -1,35 +1,38 @@
 import pytest
-from pyproxy import Proxy, Handler
+
+from pyproxy import Handler, Proxy
+
 
 class Dummy:
     pass
 
-@pytest.mark.parametrize("key,expected", [
-    (123, True),                   # int
-    ((1, 2), True),                # tuple
-    (Dummy(), True),              # objeto
-])
+
+@pytest.mark.parametrize(
+    "key,expected",
+    [
+        (123, True),  # int
+        ((1, 2), True),  # tuple
+        (Dummy(), True),  # objeto
+    ],
+)
 def test_has_interception_non_str_keys(sample, key, expected):
     called = []
 
     def intercept_has(obj):
-        called.append('true')
+        called.append("true")
         return True
 
-    proxy = Proxy(
-        sample,
-        Handler(
-            has={key: intercept_has}
-        )
-    )
+    proxy = Proxy(sample, Handler(has={key: intercept_has}))
 
     assert key in proxy
-    assert called == ['true']
+    assert called == ["true"]
+
 
 def test_has_fallback_to_iterable():
     class Container:
         def __init__(self):
             self._values = {"a", "b", "c"}
+
         def __iter__(self):
             return iter(self._values)
 
@@ -39,6 +42,7 @@ def test_has_fallback_to_iterable():
 
     assert "a" in proxy
     assert "z" not in proxy
+
 
 def test_has_fallback_to_hasattr():
     class Obj:
@@ -56,22 +60,28 @@ def test_has_fallback_to_hasattr():
 def test_delete_interception(sample):
     deleted = []
 
-    errr = 'errrrr'
-    
+    errr = "errrrr"
+
     def intercept_delete(_):
-        deleted.append('toremove')
+        deleted.append("toremove")
         raise ValueError(errr)
+
+    def delete_add(obj):
+        obj.add = None
 
     sample.to_remove = 123
 
     proxy = Proxy(
-        sample,
-        Handler(
-            delete={"toremove": intercept_delete}
-        )
+        sample, Handler(delete={"toremove": intercept_delete, "add": delete_add})
     )
     with pytest.raises(ValueError, match=errr):
         del proxy.toremove
 
     assert deleted == ["toremove"]
     assert not hasattr(sample, "toremove")
+
+    assert proxy.add(1, 2) == 3
+    del proxy.add
+
+    with pytest.raises(TypeError):
+        proxy.add(1, 2)
