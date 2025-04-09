@@ -1,6 +1,6 @@
 import pytest
 
-from pyproxy import Handler, Proxy
+from pyproxy import Handler, wrap
 
 
 class Dummy:
@@ -22,7 +22,7 @@ def test_has_interception_non_str_keys(sample, key, expected):
         called.append("true")
         return True
 
-    proxy = Proxy(sample, Handler(contain=intercept_has))
+    proxy = wrap(sample, Handler(contain=intercept_has))
 
     assert key in proxy
     assert called == ["true"]
@@ -30,7 +30,7 @@ def test_has_interception_non_str_keys(sample, key, expected):
 
 def test_has_fallback_to_iterable(sample):
 
-    proxy = Proxy(sample, Handler())
+    proxy = wrap(sample, Handler())
 
     assert "a" in sample
     assert "a" in proxy
@@ -53,7 +53,7 @@ def test_delete_interception(sample):
 
     sample.to_remove = 123
 
-    proxy = Proxy(
+    proxy = wrap(
         sample, Handler(delete={"toremove": intercept_delete, "add": delete_add})
     )
     with pytest.raises(ValueError, match=errr):

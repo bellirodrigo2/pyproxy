@@ -1,9 +1,9 @@
-from pyproxy import Handler, Proxy
+from pyproxy import Handler, wrap
 from tests.conftest import Sample
 
 
 def test_proxy_as_context_manager_direct(sample):
-    proxy = Proxy(sample, Handler())
+    proxy = wrap(sample, Handler())
 
     with proxy as s:
         assert isinstance(s, Sample)
@@ -29,7 +29,7 @@ def test_proxy_with_context_handler(sample):
         return DummyCtx()
 
     handler = Handler(context=custom_context)
-    proxy = Proxy(sample, handler)
+    proxy = wrap(sample, handler)
 
     with proxy as s:
         assert s == "custom-object"
@@ -42,7 +42,7 @@ def test_context_manager_error_without_handler_or_dunder(sample, monkeypatch):
     monkeypatch.delattr(Sample, "__enter__", raising=True)
     monkeypatch.delattr(Sample, "__exit__", raising=True)
 
-    proxy = Proxy(sample, Handler())
+    proxy = wrap(sample, Handler())
 
     import pytest
 

@@ -1,3 +1,3 @@
-from .proxy import Handler, Proxy, deep_unwrap, is_proxy, unwrap
+from .proxy import Handler, deep_unwrap, is_proxy, unwrap, wrap
 
-__all__ = ["Proxy", "Handler", "is_proxy", "unwrap", "deep_unwrap"]
+__all__ = ["wrap", "Handler", "is_proxy", "unwrap", "deep_unwrap"]

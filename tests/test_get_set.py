@@ -1,12 +1,12 @@
 # tests/test_get_set.py
-from pyproxy import Handler, Proxy
+from pyproxy import Handler, wrap
 
 
 def test_get_interception(sample):
     def get_value(obj):
         return "intercepted"
 
-    proxy = Proxy(
+    proxy = wrap(
         sample,
         Handler(
             get={
@@ -45,7 +45,7 @@ def test_set_interception(sample):
     def set_prop1(obj, val):
         obj.prop1 = val
 
-    proxy = Proxy(
+    proxy = wrap(
         sample,
         Handler(set={"value": set_value, "foo": set_nofield, "prop1": set_prop1}),
     )
