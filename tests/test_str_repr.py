@@ -3,42 +3,26 @@ import pytest
 from pyproxy import Handler, Proxy
 
 
-class Dummy:
-    def __init__(self, value: int):
-        self.value = value
-
-    def __str__(self):
-        return f"<Dummy value={self.value}>"
-
-    def __repr__(self):
-        return f"Dummy({self.value})"
+def test_default_str_repr(sample):
+    proxy = Proxy(sample, Handler())
+    assert str(proxy) == str(sample)
+    assert repr(proxy) == repr(sample)
 
 
-@pytest.fixture
-def dummy():
-    return Dummy(99)
-
-
-def test_default_str_repr(dummy):
-    proxy = Proxy(dummy, Handler())
-    assert str(proxy) == str(dummy)
-    assert repr(proxy) == repr(dummy)
-
-
-def test_custom_str_handler(dummy):
+def test_custom_str_handler(sample):
     handler = Handler(str=lambda o: f"[custom str {o.value}]")
-    proxy = Proxy(dummy, handler)
-    assert str(proxy) == "[custom str 99]"
+    proxy = Proxy(sample, handler)
+    assert str(proxy) == "[custom str 42]"
 
 
-def test_custom_repr_handler(dummy):
+def test_custom_repr_handler(sample):
     handler = Handler(repr=lambda o: f"[custom repr {o.value}]")
-    proxy = Proxy(dummy, handler)
-    assert repr(proxy) == "[custom repr 99]"
+    proxy = Proxy(sample, handler)
+    assert repr(proxy) == "[custom repr 42]"
 
 
-def test_custom_str_and_repr(dummy):
+def test_custom_str_and_repr(sample):
     handler = Handler(str=lambda o: "override str", repr=lambda o: "override repr")
-    proxy = Proxy(dummy, handler)
+    proxy = Proxy(sample, handler)
     assert str(proxy) == "override str"
     assert repr(proxy) == "override repr"

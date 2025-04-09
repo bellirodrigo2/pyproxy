@@ -34,17 +34,11 @@ def test_iterator_handler_override(iterable_sample):
     assert result == [3, 2, 1]
 
 
-def test_iterator_handler_custom_sequence():
-    class Dummy:
-        def __init__(self):
-            self.x = 10
-
-    dummy = Dummy()
-
+def test_iterator_handler_custom_sequence(sample):
     def custom_iter(obj):
         return iter(["a", "b", "c"])
 
-    proxy = Proxy(target=dummy, handler=Handler(iterator=custom_iter))
+    proxy = Proxy(target=sample, handler=Handler(iterator=custom_iter))
     assert list(proxy) == ["a", "b", "c"]
 
 
@@ -57,20 +51,15 @@ def test_next_on_proxy(iterable_sample):
         next(proxy)
 
 
-def test_next_on_proxy_with_iterator_handler():
-    class Dummy:
-        def __init__(self):
-            self.called = False
-
-    dummy = Dummy()
+def test_next_on_proxy_with_iterator_handler(sample):
 
     def custom_iter(obj):
         obj.called = True
         return iter(["x", "y"])
 
-    proxy = Proxy(target=dummy, handler=Handler(iterator=custom_iter))
+    proxy = Proxy(target=sample, handler=Handler(iterator=custom_iter))
     assert next(proxy) == "x"
     assert next(proxy) == "y"
     with pytest.raises(StopIteration):
         next(proxy)
-    assert dummy.called
+    assert sample.called

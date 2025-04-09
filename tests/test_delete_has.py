@@ -18,43 +18,25 @@ class Dummy:
 def test_has_interception_non_str_keys(sample, key, expected):
     called = []
 
-    def intercept_has(obj):
+    def intercept_has(obj, val):
         called.append("true")
         return True
 
-    proxy = Proxy(sample, Handler(has={key: intercept_has}))
+    proxy = Proxy(sample, Handler(contain=intercept_has))
 
     assert key in proxy
     assert called == ["true"]
 
 
-def test_has_fallback_to_iterable():
-    class Container:
-        def __init__(self):
-            self._values = {"a", "b", "c"}
+def test_has_fallback_to_iterable(sample):
 
-        def __iter__(self):
-            return iter(self._values)
+    proxy = Proxy(sample, Handler())
 
-    container = Container()
-
-    proxy = Proxy(container, Handler())
-
+    assert "a" in sample
     assert "a" in proxy
+
+    assert "z" not in sample
     assert "z" not in proxy
-
-
-def test_has_fallback_to_hasattr():
-    class Obj:
-        def __init__(self):
-            self.existing = True
-
-    obj = Obj()
-
-    proxy = Proxy(obj, Handler())
-
-    assert "existing" in proxy
-    assert "missing" not in proxy
 
 
 def test_delete_interception(sample):
